@@ -1,0 +1,12 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+knitr::opts_chunk$set(engine.path = list(python = '/anaconda/bin/python'))
+```
+
+```{python}
+print ("ABC") 
+```
