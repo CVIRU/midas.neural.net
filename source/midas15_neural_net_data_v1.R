@@ -5,7 +5,7 @@
 # | Created:  05/23/2018                                                   |
 # | Modified:                                                              |
 # |------------------------------------------------------------------------|
-# sink(file = "tmp/midas15_neural_net_data_v1.txt")
+sink(file = "tmp/midas15_neural_net_data_v1.txt")
 date()
 
 # Header----
@@ -45,12 +45,12 @@ gc()
 
 # Part II: exclusions----
 # Load ICD-9 list----
-# l1 <- fread("data/icd9_map_2018-05-24.csv",
+# l1 <- fread("data/icd9_map_2018-05-23.csv",
 #             colClasses = c("character"))
 # 
 # l1 <- as.comorbidity_map(list(excl = l1$code))
 # l1
-load("data/icd9_map_2018-05-24.RData")
+load("data/icd9_map_2018-05-23.RData")
 
 
 # Separate diagnoses----
@@ -78,17 +78,20 @@ comorb <- data.table(apply(Reduce("+", dtt),
 head(comorb)
 kable(format(addmargins(table(comorb)),
              big.mark = ","))
-  # |      |FALSE     |TRUE   |Sum       |
-  # |:-----|:---------|:------|:---------|
-  # |FALSE |3,428,113 |16,415 |3,444,528 |
-  # |TRUE  |408,916   |3,604  |412,520   |
-  # |Sum   |3,837,029 |20,019 |3,857,048 |
+  # |      |FALSE     |TRUE    |Sum       |
+  # |:-----|:---------|:-------|:---------|
+  # |FALSE |2,832,782 |611,746 |3,444,528 |
+  # |TRUE  |188,119   |224,401 |412,520   |
+  # |Sum   |3,020,901 |836,147 |3,857,048 |
 
 # Keep all records of patients who were admited for AMI or HF at least once----
 id.keep <- rownames(dtt[[1]])[rowSums(comorb) > 0]
-dt1 <- subset(midas15,
+cases <- subset(midas15,
               Patient_ID %in% id.keep)
-head(dt1)
+cases
 
-# sessionInfo()
-# sink()
+save(cases,
+     file = "tmp/cases.RData")
+
+sessionInfo()
+sink()
