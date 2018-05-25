@@ -1,0 +1,477 @@
+?count.na
+str(vf$CAUSE)
+library(lubridate)
+vf<-md6
+View(vf)
+vf$ADMISSION.DATE<-ymd(vf$ADMISSION.DATE)
+vf$DISCHARGE.DATE<-ymd(vf$DISCHARGE.DATE)
+vf$Duration<-vf$DISCHARGE.DATE-vf$ADMISSION.DATE
+vf$Duration
+
+hist(vf$duration)
+table(vf$duration)
+sum(is.na(vf$Patient_ID))    
+vf$age<-(vf$ADMISSION.DATE-vf$PATIENT.BIRTH.DATE)
+View(vf)
+str(vf$PATIENT.BIRTH.DATE)
+str(vf$ADMISSION.DATE)
+View(vf)
+library?(dplyr)
+str(vf$Patient_ID)
+
+require(dplyr)
+vf2$diff <- vf %>%
+  group_by(vf2$Patient_ID) %>%
+  mutate(diff = diff(ADMISSION.DATE))
+vf2<-vf      
+
+library(data.table)
+vf4 <- as.data.table(vf)
+setkey(vf4,Patient_ID)
+vf4[ , diff := c(NA, diff(ADMISSION.DATE)), by = Patient_ID]    
+vf4$Patient_ID
+hist(vf4$diff,xlim = c(0,1000),breaks="FD")
+View(vf4)
+require(dplyr)
+vf4 %>%
+   group_by(Patient_ID) %>%
+   summarize(
+             n_days=n(),
+             n_30=sum(vf4$diff<30),
+             n_60=sum(vf4$diff<60),
+             n_90=sum(vf4$diff<90)
+             )
+
+View(vf4)
+
+vf5<-vf4[which(diff<366)]
+
+vf3<-read.csv("vf3.CSV",na.strings = c(""," ","NA"))
+f1<-read.csv("f1.csv",na.fi)
+str(vf3$diff)
+sum(is.na(vf3$diff))
+vf3$diff[is.na(vf3$diff)]<- 0.1
+View(vf3)
+vf3<-vf3[ which(vf3$diff<366),]
+vf3$death <- ifelse(vf3$STATUS==20,1,0)
+vf3$outcome<- ifelse(vf3$death==1,0,ifelse(vf3$diff==0.1,2,1))
+View(vf3)
+
+gim<-vf3
+
+set.seed(82)
+
+f1<-gim[sample(nrow(gim),600,replace = FALSE ),]
+f2<-randomForest(f1$outcome~.,data = F1)
+
+vf3$diff[is.na(vf3$diff)]<- 0.1
+
+#--------------Replacing Naa-------------------------#
+f1 %>%
+  replace(is.na(.),999.99)
+View(f1)
+
+
+#---------------18.04.2017---------------------------#
+vf3$DIAGNOSIS...PRINCIPAL.MAIN<-substr(vf3$DIAGNOSIS...PRINCIPAL.MAIN,0,3)
+str(vf3)
+vf4$death<-as.factor(vf4$death)
+vf4<-vf3[,-c(10,11,36,39:46)]
+View(vf4)
+vf4<-vf4[,-c(35)]
+str(vf4)
+
+vf4$PROCEDURE...PRNCPL.MAIN.CODE<-as.factor(vf4$PROCEDURE...PRNCPL.MAIN.CODE)
+
+vf4$PROCEDURE...2ND.MAIN.CODE<-as.factor(vf4$PROCEDURE...2ND.MAIN.CODE)
+vf4$PROCEDURE...3RD.MAIN.CODE<-as.factor(vf4$PROCEDURE...3RD.MAIN.CODE)
+vf4$PROCEDURE...4TH.MAIN.CODE<-as.factor(vf4$PROCEDURE...4TH.MAIN.CODE)
+vf4$PROCEDURE...5TH.MAIN.CODE<-as.factor(vf4$PROCEDURE...5TH.MAIN.CODE)
+vf4$PROCEDURE...6TH.MAIN.CODE<-as.factor(vf4$PROCEDURE...6TH.MAIN.CODE)
+vf4$PROCEDURE...7TH.MAIN.CODE<-as.factor(vf4$PROCEDURE...7TH.MAIN.CODE)
+vf4$PROCEDURE...8TH.MAIN.CODE<-as.factor(vf4$PROCEDURE...8TH.MAIN.CODE)
+View(vf4)
+vf4$DIV<-as.factor(vf4$DIV)
+str(vf4)
+vf4$Patient_ID<-as.character(vf4$Patient_ID)
+
+vf4$DeathRNUM<-as.factor(vf4$DeathRNUM)
+str(vf4$DeathRNUM)
+table((vf4$))
+vf4$DeathRNUM<-as.factor(vf4$DeathRNUM)
+#-----------------22/04/2018------------------------#
+vf4$outcome<-as.factor(vf4$outcome)
+#substring------
+vf4$DeathRNUM<- substr(vf4$DeathRNUM,0,4)
+View(vf4)
+vf4$DIV<-as.factor(vf4$DIV)
+vf4$STATUS<-as.factor(vf4$STATUS)
+str(vf4)
+#--------------------using Dummy Variables---------------#
+dummy_hf<-vf4
+require(caret)
+dumy<- dummyVars("~.", data = dummy_hf)
+dumy
+hf_dummies<- data.frame(predict(dumy,newdata=dummy_hf))
+
+#----------------------------Cleaning dates-------------------#
+hf_hash <- vf4[,-c(1,4,6,7,8,9,14)]
+str(hf_hash)
+View(hf_hash)
+hf_hash$LOCATION<-as.factor(hf_hash$LOCATION)
+str(hf_hash)
+#--------------------Using Feature hashing-----------
+predictorNames <- setdiff(names(hf_sample),hf_sample$outcome)
+
+# change all NAs to #
+
+hf_hash[is.na(hf_hash)] <- 999
+str(hf_hash)
+
+#---------------------------Doutb------------------~
+set.seed(1234)
+?sample
+sample(floor)
+#------------------------5000-------------------#
+str(hf_hash)
+x <- hf_sample$outcome
+y <- 3
+setdiff(x,y)
+predictorNames <- setdiff(names(hf_sample),names(hf_sample$outcome))
+predictorNames <- predictorNames[1:34]
+objTrain[,predictorNames]
+hf_sample<- hf_hash[sample(nrow(hf_hash),5000),]
+split <- sample(nrow(hf_sample), floor(0.7*nrow(hf_sample)))
+objTrain <-hf_hash[split,]
+objTest <- hf_hash[-split,]
+
+library(FeatureHashing)
+#---------------------------Train---------------------------#
+objTrain_hashed = hashed.model.matrix(~., data=objTrain[,predictorNames], hash.size=2^12,create.mapping = TRUE, transpose=FALSE)
+objTrain_hashed = as(objTrain_hashed, "dgCMatrix")
+#-----------------------Hashing Mapping-------------------#
+mapping1<-hash.mapping(objTrain_hashed)
+mean(duplicated(mapping1))
+#--------------------------Test-------------------------------------------#
+objTest_hashed = hashed.model.matrix(~., data=objTest[,predictorNames], hash.size=2^20, transpose=FALSE)
+objTest_hashed = as(objTest_hashed, "dgCMatrix")
+
+#-------------------------------Another way--------#
+size<- hash.size(objTrain)
+mat2<-  hashed.model.matrix(~., data=objTrain[,predictorNames], hash.size=size,create.mapping = TRUE, transpose=FALSE)
+mapping2<-hash.mapping(mat2)
+mean(duplicated(mapping2))
+
+outcomeName <- 'outcome'
+library(glmnet)
+glmnetModel <- cv.glmnet(objTrain_hashed, objTrain[,outcomeName], 
+                         family = "multinomial", type.measure = "auc")
+glmnetPredict <- predict(glmnetModel, objTest_hashed, s="lambda.min")
+
+glmnetPredict
+confusionMatrix(objTest[,outcomeName],glmnetPredict)
+
+deviance.glmnet(objTest[,outcomeName],glmnetPredict)
+
+View(objTrain)
+objTrain[,outcome]
+#------------------------------unnceccasary check----------------------#
+View(hf_sample)
+hf_sample$LOCATION<- as.numeric(hf_sample$LOCATION)
+hf_sample$LOCATION[is.na(hf_sample$LOCATION)]<-0.1
+hf_sample[,c(2,3,10:25,28:30)]<- sapply(hf_sample[, c(2,3,10:25,28:30)],as.factor)
+str(hf_sample)
+hf_sample[is.na(hf_sample)] <- 0.1
+sum(is.na(hf_sample))
+str(hf_sample)
+str(hf_sample)
+hf_sample[,c()]
+
+#--------------------------XGBoost-------------------------------------#
+View(vf4)
+set.seed(100)
+finkk<- vf4[sample(nrow(vf4),4511),]
+sum(finkk$outcome==1)
+sum(finkk$outcome==0)
+sum(finkk$outcome==2)
+
+mkk<-finkk
+set.seed(100)
+train_ind<-sample(seq_len(nrow(mkk)),size=floor(0.75*nrow(mkk)))
+train<-mkk[train_ind,]
+test<-mkk[-train_ind,]
+
+output<-recode(finkk$outcome,"death" <- 2,"readmitted"<-1,"Not Admitted" <-0)
+
+finkk$outcome
+recode()
+View(finkk)
+
+library(dplyr)
+
+
+sparse.matrix.train= sparse.model.matrix(outcome~.-1, data = train)
+sparse.matrix.test=  sparse.model.matrix(outcome~.-1, data = test)
+output_vector = 
+
+xgb <- xgb.cv(data = sparse.matrix.train, 
+               label = output_vector, 
+               eta = 0.1,
+               max_depth = 15, 
+               nround=25, 
+               subsample = 0.5,
+               colsample_bytree = 0.5,
+               seed = 1,
+               eval_metric = "merror",
+               objective = "multi:softprob",
+               num_class = 12,
+               nthread = 3
+)
+xgb$
+xgb.model.one=    xgb.cv(data= sparse.matrix.train,     #train sparse matrix 
+                         label= output_vector,    #output vector to be predicted 
+                         eval.metric= 'logloss',     #model minimizes Root Mean Squared Error
+                         
+                         nfold= 10,
+                         #tuning parameters
+                         max.depth= 8,           
+                         eta= 0.1,  #Learnin raet              
+                         nthread = 5,             
+                         subsample= 1,            
+                         colsample_bytree= 0.5,   
+                         lambda= 0.5,             
+                         alpha= 0.5,             
+                         min_child_weight= 3,     
+                         nround= 100)   
+
+mkk[is.na(mkk)]<-9999999
+View(mkk)  
+
+colMeans(is.na(mkk))
+
+library(Matrix)
+library(xgboost)
+library(caret)
+library(car)
+
+
+
+
+
+
+
+colmeans(is.na(train1))
+
+
+
+
+
+train1$outcome1<-as.factor(train1$outcome1)
+
+
+#333
+library(data.table)
+str(train2)
+str(mkk)
+train2= data.table(mkk) #convert train set to data table format
+test1= data.table(test) #convert test set to data table format
+mkk<-mkk[,-c(mkk$DISCHARGE.DATE1)]
+sparse.matrix.train= sparse.model.matrix(outcome~.-1, data = train) #converts train set factors to columns
+sparse.matrix.test=  sparse.model.matrix(outcome~.-1, data = test1) #converts test set factors to columns
+output_vector = as.factor(train2$outcome) #output vector to be predicted
+train1$outcome1[train1$outcome==2]<-0
+train1$outcome1[is.na(train1$outcome1)]=0
+table(train1$outcome1)
+t1<-(xgb.model.one)
+t1<-as.data.frame(t1$evaluation_log)
+mean(is.na(train1$outcome1))
+label=train1$outcome1
+
+  
+  xgb.model.one=    xgb.cv(data= sparse.matrix.train,     
+                           eval.metric= 'logloss',
+                           nfold= 10,
+                         
+                           max.depth= 8,           
+                           eta= 0.1,  #Learnin raet              
+                           nthread = 5,             
+                           subsample= 1,            
+                           colsample_bytree= 0.5,   
+                           lambda= 0.5,             
+                           alpha= 0.5,             
+                           min_child_weight= 3,     
+                           nround= 100)            
+
+t2<-as.data.frame(xgb.model.two$evaluation_log)
+str(mkk)
+mkk$outcome<-as.factor(mkk$outcome)
+
+xgb.model.two=    xgboost(data= sparse.matrix.train,     
+                         label = output_vector,    
+                         eval.metric= 'logloss',     
+                         nfold= 10,
+                        na.action="na.pass",
+                         max.depth= 3,           
+                         eta= 0.05,                
+                         nthread = 5,             
+                         subsample= 1,            
+                         colsample_bytree= 0.5,   
+                         lambda= 0.5,             
+                         alpha= 0.5,              
+                         min_child_weight= 3,     
+                         nround= 100 )  
+xgb.model.two$evaluation_log
+xgb.model.two$params
+table(label)
+str(label)
+str(mkk)
+mkk$outcome<-as.factor(mkk$outcome)
+t3<-xgb.model.best$evaluation_log
+xgb.model.best=   xgboost(data= sparse.matrix.train,     #train sparse matrix 
+                          label = labels1,          #output vector to be predicted 
+                          eval.metric= 'logloss',        #model minimizes Root Mean Squared Error
+                               #regression
+                          #tuning parameters
+                          max.depth= 8,            
+                          eta= 0.1,                
+                          nthread = 5,             
+                          colsample_bytree= 0.5,   
+                          lambda= 0.5,             
+                          alpha= 0.5,              
+                          min_child_weight= 3,     
+                          nround= 30)              
+
+?xgboost
+plot(data.frame(t1$train_logloss_mean),t1$iter,col='black',ylab='CV logloss Error',xlab='# of trees')
+lines(data.frame(xgb.model.one)[,3],type='l',col='red')
+lines(data.frame(xgb.model.two)[,3],type='l',col='blue')
+lines(t3$train_logloss,type='l',col='blue')
+?plot
+
+importance = xgb.importance(feature_names = sparse.matrix.train@Dimnames[[2]], 
+                            model = xgb.model.two)  #Grab all important features
+xgb.plot.importance(importance[1:3])  #Plot for top 1
+
+
+str(Random_Forest)
+Random_Forest <- data.matrix('0' = c(628,34), '1' = c(65,597))
+XG_Boost<-data.frame('0' = c(631,31), '1' = c(61,601))
+(accuracy <- sum(diag(Random_Forest)) / sum(Random_Forest))
+
+labels1<-output_vector[1:3372]
+
+
+colMeans(is.na(finkk))
+
+
+
+colMeans(is.na(train2))
+
+train2<-train1[ , apply(train1, 2, function(x) !any(is.na(x)))]
+newdf <- t(na.omit(t(train1)))
+train2<-as.data.frame(newdf)
+str(train2)
+
+
+mkk<-finkk[,-which(colMeans(is.na(finkk))>0.5)]
+mkk[is.na(mkk)] = 0.1
+
+colMeans(is.na(mkk))
+
+mkk$CAUSE[is.na(mkk$CAUSE)]<- "jk"
+
+mkk<-finkk[,-which(rowMeans(is.na(finkk))>0.9)]
+
+sum(rowMeans(is.na(finkk))>0.55)
+
+
+colMeans(is.na(mkk))
+
+
+mkk$CAUSE<-as.numeric(mkk$CAUSE)
+mkk$NEWDTD<-as.numeric(mkk$NEWDTD)
+mkk$NEWDTD[is.na(mkk$NEWDTD)]<-0.1
+mkk$DeathRNUM<-as.numeric(mkk$DeathRNUM)
+View(mkk)
+
+colMeans(is.na(mkk))
+View(mkk)
+#######
+library(Matrix)
+?matrix::
+train_v2 <- Matrix(mkk, sparse = T)
+test_v2 <- Matrix::Matrix(model_mat_v1[-train_idx,], sparse = T)
+xgb_v2 <- xgboost(data = train_v2, label = train_out_vec, nrounds = 20, verbose = F, missing = NA)
+preds_v2 <- predict(xgb_v2, newdata = test_v2, missing = NA)
+
+
+
+
+mkk$SEX<-as.numeric(mkk$SEX)
+> str(mkk)
+
+mkk$TOTBIL <-NULL
+
+mkk$RACE<-as.numeric(mkk$RACE)
+mkk$SOURCE<-as.numeric(mkk$SOURCE)
+mkk$DIAGNOSIS...2ND.MAIN.CODE<-as.numeric(mkk$DIAGNOSIS...2ND.MAIN.CODE)
+mkk$DIAGNOSIS...3RD.MAIN.CODE<-as.numeric(mkk$DIAGNOSIS...3RD.MAIN.CODE)
+mkk$ZIP <-as.numeric(mkk$ZIP)
+mkk$PATIENT.BIRTH.DATE <-NULL
+
+mkk$DIAGNOSIS...4TH.MAIN.CODE<-as.numeric(mkk$DIAGNOSIS...4TH.MAIN.CODE)
+mkk$DIAGNOSIS...5TH.MAIN.CODE<-as.numeric(mkk$DIAGNOSIS...5TH.MAIN.CODE)
+mkk$DIAGNOSIS...6TH.MAIN.CODE<-as.numeric(mkk$DIAGNOSIS...6TH.MAIN.CODE)
+
+mkk$HISPAN<-as.numeric(mkk$HISPAN)
+
+importance_matrix<-xgb.importance(feature_names = sparse.matrix.train@Dimnames[[2]],model = xgb.model.two)
+
+xgb.plot.importance(importance_matrix[1:8])
+
+xgb.ggplot.importance()
+
+str(mkk)
+
+mkk$CAUSE<-as.numeric(mkk$CAUSE)
+mkk$SEX<-as.numeric(mkk$SEX)
+mkk$DIAGNOSIS...7TH.MAIN.CODE<-as.numeric(mkk$DIAGNOSIS...7TH.MAIN.CODE)
+mkk$DIAGNOSIS...8TH.MAIN.CODE<-as.numeric(mkk$DIAGNOSIS...8TH.MAIN.CODE)
+str(mkk)
+
+View(mkk)
+
+
+mkk<-mkk[,-c(1,2,5,8,9,10,19:26,28:34,40:46)]
+View(mkk)
+mkk<-mkk[,-c(25)]
+View(mkk)
+
+str(mkk)
+mkk$ZIP<-as.numeric(mkk$ZIP)
+mkk$RECDID<-as.numeric(mkk$RECDID)
+View(mkk)
+mkk<-mkk[,-c(18:20)]
+mkk$PRIME<-as.numeric(mkk$PRIME)
+str(mkk)
+mkk$Patient_ID<-as.numeric(mkk$Patient_ID)
+str(mkk)
+
+
+write.csv(mkk,file="mkk.csv")
+
+
+str(vf4)
+View(vf4)
+
+
+#------------------------------Clean vf4---------####
+vf4$TOTBIL<-NULL
+View(vf4)
+vf4<-vf4[,-c(1,2,5,8,9,10,19:26,28:34,40:46,53)]
+View(vf4)
+vf4<-vf4[,-c(18,19,20)]
+
+vf4(is.na(vf4))<- 9999999
+View(vf4)
+write.csv(vf4,file = "fullfile.csv")
