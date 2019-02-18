@@ -1,64 +1,160 @@
-#----------------------Daa Mapniputation and finding the days-------------------------------#
-
 ?count.na
 str(vf$CAUSE)
 library(lubridate)
-vf<-md6
+vf<-case
 View(vf)
-vf$ADMISSION.DATE<-ymd(vf$ADMISSION.DATE)
-vf$DISCHARGE.DATE<-ymd(vf$DISCHARGE.DATE)
-vf$Duration<-vf$DISCHARGE.DATE-vf$ADMISSION.DATE
-vf$Duration
+str(vf)
 
-hist(vf$duration)
+# Data - 07/02/2018-----
+vf$ADMDAT <-ymd(vf$ADMDAT)
+vf$DSCHDAT <-ymd(vf$DSCHDAT)
+str(vf)
+#------Removing Few Data----#
+vf$patbdte<-NULL
+vf$NEWDTD<-NULL
+View(vf)
+vf$TOTBIL<-NULL
+vf$HOSP<-NULL
+vf$Duration<-vf$DSCHDAT -vf$ADMDAT
+vf$ADMDAT<-NULL
+vf$DSCHDAT<-NULL
+vf$DSCYR<-NULL
+vf$YEAR<-NULL
+
+vf2<-vf
+
+str(vf)
+vf$Duration<-as.numeric(vf$Duration)
+
+View(vf$Duration)
+
+hist(vf$Duration)
+
 table(vf$duration)
-sum(is.na(vf$Patient_ID))    
-vf$age<-(vf$ADMISSION.DATE-vf$PATIENT.BIRTH.DATE)
-View(vf)
-str(vf$PATIENT.BIRTH.DATE)
-str(vf$ADMISSION.DATE)
-View(vf)
-library?(dplyr)
-str(vf$Patient_ID)
 
-require(dplyr)
-vf2$diff <- vf %>%
-  group_by(vf2$Patient_ID) %>%
-  mutate(diff = diff(ADMISSION.DATE))
-vf2<-vf      
+#sum(is.na(vf$Patient_ID))    
+#vf$age<-(vf$ADMISSION.DATE-vf$PATIENT.BIRTH.DATE)
+#View(vf)
+#str(vf$PATIENT.BIRTH.DATE)
+#str(vf$ADMISSION.DATE)
+#View(vf)
+#library?(dplyr)
+#str(vf$Patient_ID)
+#str(vf)
+
+
+
+vf2<-vf
+
+#require(dplyr)
+
+#vf2$diff <- vf2 %>%
+  #group_by(vf2$Patient_ID) %>%
+  #mutate(diff = diff(ADMDAT))
+
+#vf2<-vf      
 
 library(data.table)
 vf4 <- as.data.table(vf)
 setkey(vf4,Patient_ID)
-vf4[ , diff := c(NA, diff(ADMISSION.DATE)), by = Patient_ID]    
+#---------------------------Creating Diff vf4------------------------------------#
+vf4[ , diff := c(NA, diff(ADMDAT)), by = Patient_ID]    
 vf4$Patient_ID
 hist(vf4$diff,xlim = c(0,1000),breaks="FD")
 View(vf4)
 require(dplyr)
 vf4 %>%
-   group_by(Patient_ID) %>%
-   summarize(
-             n_days=n(),
-             n_30=sum(vf4$diff<30),
-             n_60=sum(vf4$diff<60),
-             n_90=sum(vf4$diff<90)
-             )
+  group_by(Patient_ID) %>%
+  summarize(
+    n_days=n(),
+    n_30=sum(vf4$diff<30),
+    n_60=sum(vf4$diff<60),
+    n_90=sum(vf4$diff<90)
+  )
 
 View(vf4)
 
+
+
 vf5<-vf4[which(diff<366)]
+366),]
+#Create Death
+vf4$death <- ifelse(vf4$STATUS==20,1,0)
+str(vf4)
+View(vf4)
 
-vf3<-read.csv("vf3.CSV",na.strings = c(""," ","NA"))
-f1<-read.csv("f1.csv",na.fi)
-str(vf3$diff)
-sum(is.na(vf3$diff))
-vf3$diff[is.na(vf3$diff)]<- 0.1
-View(vf3)
-vf3<-vf3[ which(vf3$diff<366),]
-vf3$death <- ifelse(vf3$STATUS==20,1,0)
-vf3$outcome<- ifelse(vf3$death==1,0,ifelse(vf3$diff==0.1,2,1))
-View(vf3)
+#July 5th 
+#----------------------------Readmission-----------------------------------#
+View(vf4)
+vf4$X<-NULL
+vf4$Patient_ID<-as.numeric(vf4$Patient_ID)
+View(vf4)
+vf4$CAUSE<-NULL
+vf4$RACE<-as.numeric(vf4$race)
+#--------------------------Create a Frequency table----------------------------#
+vf4$HISPAN<-as.numeric(vf4$HISPAN)
+vf4<-data.table(vf4)
+vf4[,'freq-loc':=.N,by = Patient_ID]
+View(vf4)
 
+
+vf4$death
+str(vf4$death)
+sum(is.na(vf4$diff))
+
+vf4$diff[is.na(vf4$diff)]<- 0
+
+vf4$outcome<- ifelse(vf4$death==1,0,ifelse(vf4$`freq-loc`==0,2,1))
+
+View(vf4)
+
+vf5<-vf4
+
+vf5$death<-NULL
+
+vf5$death<-NULL
+vf5$`freq-loc`<-NULL
+write.csv(vf5,'july5.csv')
+vf5$rec<-NULL
+vf5$ADMDAT<-NULL
+vf5$DSCHDAT<-NULL
+View(vf5)
+
+#-----------------------July 9th-------------------#
+
+vf6<-vf5[,-c(9:14,16:22)]
+View(vf6)
+vf6$check<-NULL
+
+ninja <- keygen()
+pub <- pubkey(ninja)
+
+msg <- serialize(vf6, NULL)
+ciphertext <- simple_encrypt(msg, pub)
+View(ciphertext)
+
+#-------------------------July 10th--------------------#
+anonymize <- function(x, algo="sha1"){
+  unq_hashes <- vapply(unique(x), function(object) digest(object, algo=algo), FUN.VALUE="", USE.NAMES=TRUE)
+  unname(unq_hashes[x])
+}
+
+cols_to_mask <- c("Patient_ID")
+#cols_to_mask <- c("Patient_ID","DX1","DX2","DX3")
+
+vf7[,cols_to_mask := lapply(.SD, anonymize),.SDcols=cols_to_mask,with=FALSE]
+
+hashed_id <- function(x, salt) {
+  y <- paste(x, salt)
+  y <- sapply(y, function(X) digest(X, algo="sha1"))
+  as.character(y)
+}
+
+sapply(vf7$Patient_ID,digest,algo="
+       SHA1")
+
+
+mydata$id <- hashed_id(mydata$raw_id, "somesalt1234")
 gim<-vf3
 
 set.seed(82)
@@ -66,8 +162,139 @@ set.seed(82)
 f1<-gim[sample(nrow(gim),600,replace = FALSE ),]
 f2<-randomForest(f1$outcome~.,data = F1)
 
-vf3$diff[is.na(vf3$diff)]<- 0.1
+vf4$diff[is.na(vf4$diff)]<- 0.1
 
+table(cases)
+#-----------------------July 11th-------------------------#
+#vf7<-july9
+#str(vf7$Patient_ID)
+#View(vf7)
+#x<-as.character(vf7$Patient_ID)
+#x<-charToRaw(vf7$Patient_ID)
+
+#encrypt <- function(x){
+  # function assumes you already created a RSA key called key
+  #x <- charToRaw(k)
+  #e <- PKI.encrypt(x, key,"aes256")
+  #return(e)
+#}
+
+#decrypt <- function(x) {
+  # function assumes you already have a key called key
+  #e <- PKI.decrypt(x, key,"aes256")
+  #x <- rawToChar(e)
+  #return(x)
+#}
+
+
+#vf7$bits <- map(vf7$Patient_ID, encrypt)
+
+#library(PKI)
+
+#k
+    
+#x<-as.character(x)
+#x
+#vf7$bits <- as.raw(vf7$Patient_ID)
+#x<-as.integer(x)
+#x
+#key <- PKI.digest(charToRaw("hello"), "SHA256")
+#ae <- PKI.encrypt(x, key, "aes256")
+#ad <- PKI.decrypt(ae, key, "aes256")
+#ae
+#ad
+#stopifnot(identical(x, ad))
+
+#key <- as.raw(1:16)
+#aes <- AES(key)
+#e <- PKI.encrypt(x, key)
+#library(PKI)
+#aes$encrypt(x)
+#f<-aes$decrypt(aes$encrypt(x), raw=TRUE)
+
+#library(digest)
+#-------------------------------------July 12th---------------------------#
+ vf8<-vf7
+ vf8$bits<-NULL
+ write.csv(vf8,"vf8.csv")
+ orig<-(,c(vf8$Patient_ID,vf8$SEX,vf8$DX1,vf8$DX2,vf8$DX3,vf8$PROC1,vf8$PRIME))
+
+ orig<-vf8[c(1,2,5:8,10,11)]
+ View(orig)
+ write.csv(orig,"orig.csv")
+ View(vf8)
+
+
+
+c1 <- cut(vf8$AGE, breaks = c(0,20,40,60,80,100,120))
+orig$agebin<-c1
+orig$bin_categor<-as.numeric(orig$agebin)
+orig$bin_categor<-as.numeric(orig$agebin)
+View(orig)
+
+vf8$DX1<-as.factor(vf8$DX1)
+vf8$DX1
+vf8$DX1<-as.numeric(vf8$DX1)
+vf8$DX1
+orig$d1<-vf8$DX1
+vf8$DX2<-as.factor(vf8$DX2)
+vf8$DX3<-as.factor(vf8$DX3)
+vf8$DX2<-as.numeric(vf8$DX2)
+vf8$DX3<-as.numeric(vf8$DX3)
+#adding diagnosis to original file
+orig$x1<-vf8$DX1
+orig$x2<-vf8$DX2
+orig$x3<-vf8$DX3
+
+vf9$X5<-vf4$DX1
+vf9$X6<-vf4$DX2
+vf9$X7<-vf4$DX3
+View(vf9)
+
+vf8$bin<-orig$bin_categor
+View(vf8)
+vf8$PRIME<-as.factor(vf8$PRIME)
+vf8$PRIME<-as.numeric(vf8$PRIME)
+vf8$AGE<-NULL
+
+orig$primecode<-vf8$PRIME
+View(orig)
+vf9<-vf8
+
+names(vf9)<-c("X1","X2","X3","X4","X5","X6","X7","X8","X9","X10","X11","X12","X13","X14","X15","X16")
+names(vf9)
+
+#------------------------------------------------July 31st---------------------------------#
+lm<-as.numeric(levels(orig$DX1))[orig$DX1]
+Warning message:
+  NAs introduced by coercion 
+> sum(is.na(lm))
+[1] 92955
+#------------------------------------------------August 7th--------------------------------#
+l<-as.character(vf4$DX1)
+m<-as.character(vf4$DX2)
+n<-as.character(vf4$DX3)
+f<-as.data.frame(l,m,n)
+k<-as.factor(f$`c(l, m, n)`)
+k<-as.numeric(k)
+r1<-k[1:6910365]
+r2<-k[6910366:13820730]
+r3<-k[13820731:20731095]
+vf10$dx1<-r1
+vf10$dx2<-r2
+vf10$dx3<-r3
+write.csv(vf10,"orig1.csv")
+orig$y1<-vf10$dx1
+orig$y2<-vf10$dx2
+orig$y3<-vf10$dx3
+vf11<-vf9
+vf11$X5<-vf10$dx1
+vf11$X6<-vf10$dx2
+vf11$X7<-vf10$dx3
+vf11$X8<-as.numeric(vf11$X8)
+vf11$X8
+View(orig)
+str(vf11)
 #--------------Replacing Naa-------------------------#
 f1 %>%
   replace(is.na(.),999.99)
@@ -215,36 +442,36 @@ library(dplyr)
 sparse.matrix.train= sparse.model.matrix(outcome~.-1, data = train)
 sparse.matrix.test=  sparse.model.matrix(outcome~.-1, data = test)
 output_vector = 
-
-xgb <- xgb.cv(data = sparse.matrix.train, 
-               label = output_vector, 
-               eta = 0.1,
-               max_depth = 15, 
-               nround=25, 
-               subsample = 0.5,
-               colsample_bytree = 0.5,
-               seed = 1,
-               eval_metric = "merror",
-               objective = "multi:softprob",
-               num_class = 12,
-               nthread = 3
-)
+  
+  xgb <- xgb.cv(data = sparse.matrix.train, 
+                label = output_vector, 
+                eta = 0.1,
+                max_depth = 15, 
+                nround=25, 
+                subsample = 0.5,
+                colsample_bytree = 0.5,
+                seed = 1,
+                eval_metric = "merror",
+                objective = "multi:softprob",
+                num_class = 12,
+                nthread = 3
+  )
 xgb$
-xgb.model.one=    xgb.cv(data= sparse.matrix.train,     #train sparse matrix 
-                         label= output_vector,    #output vector to be predicted 
-                         eval.metric= 'logloss',     #model minimizes Root Mean Squared Error
-                         
-                         nfold= 10,
-                         #tuning parameters
-                         max.depth= 8,           
-                         eta= 0.1,  #Learnin raet              
-                         nthread = 5,             
-                         subsample= 1,            
-                         colsample_bytree= 0.5,   
-                         lambda= 0.5,             
-                         alpha= 0.5,             
-                         min_child_weight= 3,     
-                         nround= 100)   
+  xgb.model.one=    xgb.cv(data= sparse.matrix.train,     #train sparse matrix 
+                           label= output_vector,    #output vector to be predicted 
+                           eval.metric= 'logloss',     #model minimizes Root Mean Squared Error
+                           
+                           nfold= 10,
+                           #tuning parameters
+                           max.depth= 8,           
+                           eta= 0.1,  #Learnin raet              
+                           nthread = 5,             
+                           subsample= 1,            
+                           colsample_bytree= 0.5,   
+                           lambda= 0.5,             
+                           alpha= 0.5,             
+                           min_child_weight= 3,     
+                           nround= 100)   
 
 mkk[is.na(mkk)]<-9999999
 View(mkk)  
@@ -289,39 +516,39 @@ t1<-as.data.frame(t1$evaluation_log)
 mean(is.na(train1$outcome1))
 label=train1$outcome1
 
-  
-  xgb.model.one=    xgb.cv(data= sparse.matrix.train,     
-                           eval.metric= 'logloss',
-                           nfold= 10,
+
+xgb.model.one=    xgb.cv(data= sparse.matrix.train,     
+                         eval.metric= 'logloss',
+                         nfold= 10,
                          
-                           max.depth= 8,           
-                           eta= 0.1,  #Learnin raet              
-                           nthread = 5,             
-                           subsample= 1,            
-                           colsample_bytree= 0.5,   
-                           lambda= 0.5,             
-                           alpha= 0.5,             
-                           min_child_weight= 3,     
-                           nround= 100)            
+                         max.depth= 8,           
+                         eta= 0.1,  #Learnin raet              
+                         nthread = 5,             
+                         subsample= 1,            
+                         colsample_bytree= 0.5,   
+                         lambda= 0.5,             
+                         alpha= 0.5,             
+                         min_child_weight= 3,     
+                         nround= 100)            
 
 t2<-as.data.frame(xgb.model.two$evaluation_log)
 str(mkk)
 mkk$outcome<-as.factor(mkk$outcome)
 
 xgb.model.two=    xgboost(data= sparse.matrix.train,     
-                         label = output_vector,    
-                         eval.metric= 'logloss',     
-                         nfold= 10,
-                        na.action="na.pass",
-                         max.depth= 3,           
-                         eta= 0.05,                
-                         nthread = 5,             
-                         subsample= 1,            
-                         colsample_bytree= 0.5,   
-                         lambda= 0.5,             
-                         alpha= 0.5,              
-                         min_child_weight= 3,     
-                         nround= 100 )  
+                          label = output_vector,    
+                          eval.metric= 'logloss',     
+                          nfold= 10,
+                          na.action="na.pass",
+                          max.depth= 3,           
+                          eta= 0.05,                
+                          nthread = 5,             
+                          subsample= 1,            
+                          colsample_bytree= 0.5,   
+                          lambda= 0.5,             
+                          alpha= 0.5,              
+                          min_child_weight= 3,     
+                          nround= 100 )  
 xgb.model.two$evaluation_log
 xgb.model.two$params
 table(label)
@@ -332,7 +559,7 @@ t3<-xgb.model.best$evaluation_log
 xgb.model.best=   xgboost(data= sparse.matrix.train,     #train sparse matrix 
                           label = labels1,          #output vector to be predicted 
                           eval.metric= 'logloss',        #model minimizes Root Mean Squared Error
-                               #regression
+                          #regression
                           #tuning parameters
                           max.depth= 8,            
                           eta= 0.1,                
@@ -401,7 +628,7 @@ View(mkk)
 #######
 library(Matrix)
 ?matrix::
-train_v2 <- Matrix(mkk, sparse = T)
+  train_v2 <- Matrix(mkk, sparse = T)
 test_v2 <- Matrix::Matrix(model_mat_v1[-train_idx,], sparse = T)
 xgb_v2 <- xgboost(data = train_v2, label = train_out_vec, nrounds = 20, verbose = F, missing = NA)
 preds_v2 <- predict(xgb_v2, newdata = test_v2, missing = NA)
@@ -477,3 +704,43 @@ vf4<-vf4[,-c(18,19,20)]
 vf4(is.na(vf4))<- 9999999
 View(vf4)
 write.csv(vf4,file = "fullfile.csv")
+
+#June 3#
+test$ADMDAT<-NULL
+test$DSCHDAT<-NULL
+
+str(test$RACE)
+test$RACE<-as.numeric(test$RACE)
+View(test)
+View(vf4)
+View(test)
+test$TOTBIL<-NULL
+View(test)
+table(test$RACE)
+
+
+
+#####
+library(PKI)
+library(purrr)
+key <- PKI.genRSAkey(2048)
+
+# create some helper functions
+encrypt <- function(x){
+  # function assumes you already created a RSA key called key
+  x <- charToRaw(x)
+  e <- PKI.encrypt(x, key)
+  return(e)
+}
+
+decrypt <- function(x) {
+  # function assumes you already have a key called key
+  e <- PKI.decrypt(x, key)
+  x <- rawToChar(e)
+  return(x)
+}
+
+#  encrypt the first name
+df$ip <- map(df$fname, encrypt)
+
+str(df)
